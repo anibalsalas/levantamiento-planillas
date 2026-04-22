@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Levantamiento de Información — Sistema de Planillas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D2954;--navy2:#1a3a6b;--blue:#1D6FA5;--blue-lt:#E8F4FD;--blue-md:#B8D9F0;
+  --accent:#C8961E;--accent-lt:#FEF3E2;
+  --red:#C0392B;--red-lt:#FDF0EE;
+  --green:#0F6B3E;--green-lt:#E8F7F0;
+  --gray1:#F7F8FA;--gray2:#EEF0F4;--gray3:#D1D5DC;--gray4:#9CA3AF;--gray5:#4B5563;--gray9:#111827;
+  --border:1px solid #E2E6EB;--radius:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+}
+html,body{min-height:100%;background:var(--gray1);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;color:var(--gray9)}
+#root{min-height:100vh}
+.app{max-width:820px;margin:0 auto;padding:0 16px 60px}
+
+/* ── HEADER ── */
+.corp-header{background:var(--navy);color:#fff;border-radius:0 0 14px 14px;margin:0 -16px 0;overflow:hidden}
+.corp-header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid rgba(255,255,255,.1)}
+.corp-logo{display:flex;align-items:center;gap:10px}
+.corp-logo-box{width:38px;height:38px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;letter-spacing:.02em}
+.corp-logo-text{font-size:13px;font-weight:600}
+.corp-logo-sub{font-size:10px;opacity:.6;margin-top:2px}
+.corp-badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 12px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.corp-header-body{padding:18px 24px 20px;display:flex;align-items:flex-end;justify-content:space-between}
+.corp-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.corp-subtitle{font-size:11px;opacity:.55}
+.corp-pct-num{font-size:30px;font-weight:700;line-height:1;text-align:right}
+.corp-pct-label{font-size:10px;opacity:.6;text-align:right;margin-top:2px}
+.prog-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:13px 24px;background:rgba(0,0,0,.18)}
+.prog-label{font-size:10px;color:rgba(255,255,255,.5);margin-bottom:5px;display:flex;justify-content:space-between}
+.prog-label span{color:rgba(255,255,255,.85)}
+.prog-track{height:3px;background:rgba(255,255,255,.15);border-radius:2px}
+.prog-fill{height:3px;border-radius:2px;transition:width .5s ease}
+
+/* ── TABS ── */
+.tabs-wrap{background:#fff;border-bottom:var(--border);box-shadow:var(--shadow);position:sticky;top:0;z-index:100;margin:0 -16px}
+.tabs{display:flex;padding:0 24px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 16px;font-size:13px;cursor:pointer;color:var(--gray4);border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap;background:none;border-left:none;border-right:none;border-top:none;font-family:inherit;letter-spacing:.01em}
+.tab:hover{color:var(--gray5)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.tab-pct{font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600}
+.tab-pct.done{background:var(--green-lt);color:var(--green)}
+.tab-pct.partial{background:var(--blue-lt);color:var(--blue)}
+
+/* ── FORM BODY ── */
+.form-body{padding:20px 0}
+
+/* ── SECTION CARD ── */
+.section{background:#fff;border:var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:var(--border);background:var(--gray1)}
+.sec-title{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.07em}
+.sec-badge{font-size:10px;padding:2px 9px;border-radius:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.badge-red{background:var(--red-lt);color:var(--red)}
+.badge-blue{background:var(--blue-lt);color:var(--blue)}
+.badge-amber{background:var(--accent-lt);color:var(--accent)}
+.sec-body{padding:18px}
+
+/* ── SUBSECTION ── */
+.subsec{border:1px solid #E8F0F7;border-radius:7px;padding:14px;margin-bottom:14px;background:#FAFCFE}
+.subsec:last-child{margin-bottom:0}
+.subsec-title{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.07em;margin-bottom:13px;display:flex;align-items:center;gap:7px}
+.subsec-title::before{content:"";display:inline-block;width:3px;height:13px;background:var(--blue);border-radius:2px;flex-shrink:0}
+.subsec.norm{border-color:#F0E8D8;background:#FEFCF7}
+.subsec.norm .subsec-title{color:var(--accent)}
+.subsec.norm .subsec-title::before{background:var(--accent)}
+.subsec.crit{border-color:#F5DDD9;background:#FEFAF9}
+.subsec.crit .subsec-title{color:var(--red)}
+.subsec.crit .subsec-title::before{background:var(--red)}
+
+/* ── GRID ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* ── FIELDS ── */
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field-label{font-size:11px;font-weight:700;color:var(--gray5);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.req{color:var(--red)}
+.field input,.field select,.field textarea{
+  width:100%;padding:9px 12px;border:var(--border);border-radius:6px;
+  font-size:13px;color:var(--gray9);background:#fff;font-family:inherit;
+  transition:border-color .15s,box-shadow .15s;outline:none;
+  -webkit-appearance:none;appearance:none
+}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,111,165,.1)}
+.field textarea{resize:vertical;line-height:1.6}
+.field-hint{font-size:10px;color:var(--gray4);margin-top:4px;line-height:1.5}
+.field-hint.norm{color:var(--accent);font-weight:600}
+
+/* ── CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:3px}
+.chip{padding:6px 13px;border-radius:20px;border:1px solid var(--gray3);background:#fff;color:var(--gray5);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;line-height:1.3}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.chip.on{border-color:var(--blue);background:var(--blue-lt);color:var(--blue);font-weight:600}
+.chip.on::before{content:"✓  "}
+
+/* ── NUM GRID ── */
+.num-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;padding:14px;background:var(--gray1);border-radius:7px;border:var(--border);margin-top:10px}
+.num-grid-title{font-size:10px;font-weight:700;color:var(--gray4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;grid-column:1/-1}
+
+/* ── INFO BOX ── */
+.info-box{background:var(--accent-lt);border-left:3px solid var(--accent);border-radius:0 7px 7px 0;padding:11px 14px;margin-bottom:14px;font-size:11px;color:var(--gray5);line-height:1.7}
+.info-box strong{color:var(--accent)}
+.divider{height:1px;background:var(--gray2);margin:14px 0}
+
+/* ── ACTION BAR ── */
+.action-bar{background:#fff;border:var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow-md);margin-top:4px}
+.btn{padding:9px 20px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.01em}
+.btn-outline{border:var(--border);background:#fff;color:var(--gray5)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+.btn-primary{background:var(--navy);border:2px solid var(--navy);color:#fff}
+.btn-primary:hover{background:var(--navy2);border-color:var(--navy2)}
+.btn-primary:disabled{background:var(--gray3);border-color:var(--gray3);cursor:default}
+.save-ok{font-size:12px;color:var(--green);font-weight:500}
+.save-err{font-size:12px;color:var(--red);font-weight:500}
+
+/* ── EXPORT ── */
+.export-box{background:#fff;border:var(--border);border-radius:var(--radius);overflow:hidden;margin-top:14px;box-shadow:var(--shadow)}
+.export-head{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;background:var(--gray1);border-bottom:var(--border)}
+.export-head span{font-size:12px;font-weight:700;color:var(--navy)}
+.btn-sm{padding:5px 12px;border-radius:5px;border:var(--border);background:#fff;cursor:pointer;font-size:11px;color:var(--gray5);font-family:inherit;font-weight:500}
+.btn-sm:hover{border-color:var(--blue);color:var(--blue)}
+pre.export-pre{margin:0;padding:16px;font-size:11px;color:var(--gray5);overflow-x:auto;white-space:pre-wrap;line-height:1.7;max-height:320px;overflow-y:auto;background:#fff}
+
+/* ── SQL ── */
+.sql-wrap{position:relative}
+pre.sql-pre{margin:0;background:#0D2954;color:#93C5FD;padding:16px;border-radius:7px;font-size:12px;white-space:pre-wrap;line-height:1.7}
+.sql-copy{position:absolute;top:10px;right:10px;padding:4px 11px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:5px;cursor:pointer;font-size:11px;color:#fff;font-family:inherit;font-weight:500}
+.sql-copy:hover{background:rgba(255,255,255,.2)}
+
+/* ── SUBNOTE ── */
+.subnote{background:var(--blue-lt);border:1px solid var(--blue-md);border-radius:7px;padding:14px;margin-bottom:14px}
+.subnote p{font-size:12px;color:var(--navy2);font-weight:700;margin-bottom:7px}
+.subnote ol{padding-left:18px;font-size:12px;color:var(--blue);line-height:2.1}
+.subnote.green{background:var(--green-lt);border-color:#9FD4B8}
+.subnote.green p,.subnote.green ol{color:var(--green)}
+.subnote.green p{color:#085041}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const{useState}=React,r=React.createElement;
+
+function cp(obj){
+  const skip=["observaciones"];let t=0,f=0;
+  for(const[k,v]of Object.entries(obj)){if(skip.includes(k))continue;t++;if(Array.isArray(v)?v.length>0:String(v).trim()!=="")f++;}
+  return{total:t,filled:f,pct:t?Math.round(f/t*100):0};
+}
+
+const REGIMENES=[{v:"D.Leg. 276 — Carrera Administrativa"},{v:"D.Leg. 728 — Régimen Privado"},{v:"CAS (D.Leg. 1057)"},{v:"Servicio Civil — Ley 30057 (SERVIR)"}];
+const DESCUENTOS_OPC=[{v:"Préstamos internos"},{v:"Cooperativa de ahorro"},{v:"Descuentos judiciales / alimentos"},{v:"Cuota sindical"},{v:"Prestaciones ESSALUD"}];
+const METODOS=[{v:"Abono en cuenta CCI"},{v:"Cheque nominativo"},{v:"Pago en efectivo"}];
+
+const INI={
+  rrhh:{entidad:"",fecha:"",entrevistado:"",cargo:"",email:"",telefono:"",
+    herramienta_actual:"",num_planillas:"",dia_inicio:"",dia_pago:"",
+    regimenes:[],num_276:"",num_728:"",num_cas:"",num_servir:"",
+    origen_asistencia:"",bonificaciones_variables:"",
+    tardi_tiene_tolerancia:"",tardi_minutos_tolerancia:"",
+    tardi_formula_calculo:"",tardi_quien_consolida:"",
+    tardi_como_justifica:"",tardi_descuento_inasistencia:"",tardi_acumula_mes:"",
+    afp_onp:"",calcula_quinta:"",descuentos_opcionales:[],manejo_licencias:"",
+    errores_frecuentes:"",procesos_lentos:"",reportes_actuales:"",no_puede_fallar:"",observaciones:""},
+  contabilidad:{entrevistado:"",cargo:"",email:"",registra_siaf:"",tipo_operacion:"",
+    clasificadores:"",genera_archivo_siaf:"",pdt601_quien:"",pdt601_herramienta:"",
+    observaciones_auditoria:"",observaciones:""},
+  tesoreria:{entrevistado:"",cargo:"",email:"",metodos_pago:[],banco_principal:"",
+    tiene_convenio:"",genera_archivo_banco:"",formato_banco:"",
+    manejo_devoluciones:"",quien_autoriza:"",observaciones:""},
+  config:{url:"",key:""}
+};
+
+/* ── Base components ── */
+function I({label,value,onChange,type="text",hint,hn,placeholder,req,full}){
+  return r("div",{className:"field",style:full?{gridColumn:"1/-1"}:null},
+    r("label",{className:"field-label"},label,req&&r("span",{className:"req"}," *")),
+    r("input",{type,value,onChange:e=>onChange(e.target.value),placeholder:placeholder||""}),
+    hint&&r("p",{className:"field-hint"+(hn?" norm":"")},hint));
+}
+function T({label,value,onChange,rows=3,hint,placeholder,full}){
+  return r("div",{className:"field",style:full?{gridColumn:"1/-1"}:null},
+    r("label",{className:"field-label"},label),
+    r("textarea",{value,onChange:e=>onChange(e.target.value),rows,placeholder:placeholder||""}),
+    hint&&r("p",{className:"field-hint"},hint));
+}
+function Sel({label,value,onChange,opts,hint,hn,full}){
+  return r("div",{className:"field",style:full?{gridColumn:"1/-1"}:null},
+    r("label",{className:"field-label"},label),
+    r("select",{value,onChange:e=>onChange(e.target.value)},
+      r("option",{value:""},"— Seleccionar —"),
+      opts.map(o=>r("option",{key:o.v,value:o.v},o.v))),
+    hint&&r("p",{className:"field-hint"+(hn?" norm":"")},hint));
+}
+function Chips({label,opts,selected,onChange,hint,full}){
+  const toggle=v=>onChange(selected.includes(v)?selected.filter(x=>x!==v):[...selected,v]);
+  return r("div",{className:"field",style:full?{gridColumn:"1/-1"}:null},
+    r("label",{className:"field-label"},label),
+    r("div",{className:"chips"},opts.map(o=>r("button",{key:o.v,onClick:()=>toggle(o.v),className:"chip"+(selected.includes(o.v)?" on":"")},o.v))),
+    hint&&r("p",{className:"field-hint"},hint));
+}
+function Sec({title,badge,bc,children}){
+  const cls=bc==="red"?"badge-red":bc==="amber"?"badge-amber":"badge-blue";
+  return r("div",{className:"section"},
+    r("div",{className:"sec-head"},r("span",{className:"sec-title"},title),badge&&r("span",{className:"sec-badge "+cls},badge)),
+    r("div",{className:"sec-body"},children));
+}
+function Sub({title,type,children}){
+  return r("div",{className:"subsec"+(type?" "+type:"")},r("div",{className:"subsec-title"},title),children);
+}
+
+/* ── RRHH ── */
+function RRHHForm({d,u}){
+  return r("div",null,
+    r(Sec,{title:"Datos generales de la visita",badge:"Obligatorio",bc:"red"},
+      r("div",{className:"grid2"},
+        r(I,{label:"Nombre de la entidad",value:d.entidad,onChange:v=>u("entidad",v),req:true}),
+        r(I,{label:"Fecha de entrevista",value:d.fecha,onChange:v=>u("fecha",v),type:"date",req:true}),
+        r(I,{label:"Nombre del entrevistado",value:d.entrevistado,onChange:v=>u("entrevistado",v),req:true}),
+        r(I,{label:"Cargo / Puesto",value:d.cargo,onChange:v=>u("cargo",v),req:true}),
+        r(I,{label:"Correo electrónico",value:d.email,onChange:v=>u("email",v),type:"email"}),
+        r(I,{label:"Teléfono / Anexo",value:d.telefono,onChange:v=>u("telefono",v)})
+      )
+    ),
+    r(Sec,{title:"Proceso actual de elaboración",badge:"Crítico",bc:"red"},
+      r("div",{className:"grid2"},
+        r(Sel,{full:true,label:"¿Con qué herramienta elaboran la planilla actualmente?",value:d.herramienta_actual,onChange:v=>u("herramienta_actual",v),opts:[
+          {v:"Excel — hojas de cálculo"},{v:"Sistema informático legacy"},{v:"Combinación Excel + sistema legacy"},{v:"Proceso manual / físico"}
+        ],hint:"Si hay sistema, anotar nombre y versión en Observaciones"}),
+        r(I,{label:"N° de planillas distintas al mes",value:d.num_planillas,onChange:v=>u("num_planillas",v),placeholder:"ej: 3 (una por régimen)"}),
+        r(I,{label:"Día que inicia el proceso",value:d.dia_inicio,onChange:v=>u("dia_inicio",v),placeholder:"ej: día 25 del mes anterior"}),
+        r(I,{label:"Día de ejecución del pago",value:d.dia_pago,onChange:v=>u("dia_pago",v),placeholder:"ej: último día hábil del mes"}),
+        r(Sel,{full:true,label:"¿Cómo obtienen los datos de asistencia y tardanzas?",value:d.origen_asistencia,onChange:v=>u("origen_asistencia",v),opts:[
+          {v:"Reloj biométrico con exportación automática al sistema"},
+          {v:"Reloj biométrico con descarga manual de datos"},
+          {v:"Parte de asistencia en papel firmado por jefes de área"},
+          {v:"Sin control formal de asistencia"}
+        ]}),
+        r(Sel,{full:true,label:"¿Hay conceptos remunerativos que varían mes a mes?",value:d.bonificaciones_variables,onChange:v=>u("bonificaciones_variables",v),opts:[
+          {v:"Sí — horas extra principalmente"},{v:"Sí — horas extra, guardias, bonos variables"},{v:"No — planilla estable mes a mes"}
+        ]})
+      )
+    ),
+    r(Sec,{title:"Regímenes laborales vigentes",badge:"Crítico",bc:"red"},
+      r(Chips,{full:true,label:"¿Qué regímenes laborales tiene la entidad? (seleccionar todos los que apliquen)",opts:REGIMENES,selected:d.regimenes,onChange:v=>u("regimenes",v)}),
+      d.regimenes.length>0&&r("div",{className:"num-grid"},
+        r("p",{className:"num-grid-title"},"N° aproximado de trabajadores por régimen activo"),
+        d.regimenes.includes("D.Leg. 276 — Carrera Administrativa")&&r(I,{label:"Trabajadores D.Leg. 276",value:d.num_276,onChange:v=>u("num_276",v),placeholder:"ej: 45"}),
+        d.regimenes.includes("D.Leg. 728 — Régimen Privado")&&r(I,{label:"Trabajadores D.Leg. 728",value:d.num_728,onChange:v=>u("num_728",v),placeholder:"ej: 12"}),
+        d.regimenes.includes("CAS (D.Leg. 1057)")&&r(I,{label:"Trabajadores CAS",value:d.num_cas,onChange:v=>u("num_cas",v),placeholder:"ej: 78"}),
+        d.regimenes.includes("Servicio Civil — Ley 30057 (SERVIR)")&&r(I,{label:"Trabajadores SERVIR",value:d.num_servir,onChange:v=>u("num_servir",v),placeholder:"ej: 20"})
+      )
+    ),
+    r(Sec,{title:"Descuento por tardanzas e inasistencias",badge:"Regla de negocio crítica",bc:"red"},
+      r("div",{className:"info-box"},
+        r("strong",null,"Base normativa: "),
+        "D.Leg. 276 Art. 24 / D.S. 005-90-PCM — el descuento se aplica proporcionalmente sobre la remuneración mensual. Cada minuto de tardanza reduce el proporcional correspondiente. Las inasistencias generan descuento del día completo. Esta sección define las reglas de negocio más complejas del sistema."
+      ),
+      r(Sub,{title:"Tolerancia y control de ingreso"},
+        r("div",{className:"grid2"},
+          r(Sel,{label:"¿Existe margen de tolerancia por tardanza?",value:d.tardi_tiene_tolerancia,onChange:v=>u("tardi_tiene_tolerancia",v),opts:[
+            {v:"Sí — hay minutos de tolerancia antes de registrar tardanza"},
+            {v:"No — cualquier minuto después de la hora se descuenta"},
+            {v:"Varía según área o cargo"}
+          ]}),
+          r(I,{label:"¿Cuántos minutos de tolerancia? (si aplica)",value:d.tardi_minutos_tolerancia,onChange:v=>u("tardi_minutos_tolerancia",v),placeholder:"ej: 5 minutos, 10 minutos, 0",hint:"Si varía por área, anotar excepciones en Observaciones"})
+        )
+      ),
+      r(Sub,{title:"Fórmula y método de cálculo",type:"norm"},
+        r("div",{className:"grid2"},
+          r(Sel,{full:true,label:"¿Cómo calculan el descuento por tardanza?",value:d.tardi_formula_calculo,onChange:v=>u("tardi_formula_calculo",v),opts:[
+            {v:"Proporcional por minuto: (Rem. mensual ÷ 30 días ÷ horas jornada × minutos tardanza)"},
+            {v:"Proporcional por hora: se redondea al bloque de hora completa"},
+            {v:"Descuento fijo por evento de tardanza sin importar minutos"},
+            {v:"No se aplica descuento — se registra solo para control interno"}
+          ],hint:"La fórmula proporcional por minuto es la que exige el D.Leg. 276 — verificar si la entidad la aplica correctamente",hn:true}),
+          r(Sel,{label:"¿Cómo calculan el descuento por inasistencia injustificada?",value:d.tardi_descuento_inasistencia,onChange:v=>u("tardi_descuento_inasistencia",v),opts:[
+            {v:"Descuento del día completo: Remuneración mensual ÷ 30"},
+            {v:"Descuento del día hábil: Remuneración mensual ÷ días hábiles del mes"},
+            {v:"Se descuenta un día más como penalidad adicional"},
+            {v:"No se aplica descuento — se tramita como falta disciplinaria"}
+          ]}),
+          r(Sel,{label:"¿Las tardanzas acumuladas generan descuento adicional?",value:d.tardi_acumula_mes,onChange:v=>u("tardi_acumula_mes",v),opts:[
+            {v:"Sí — al acumular cierta cantidad se convierte en inasistencia"},
+            {v:"No — cada tardanza se descuenta individualmente sin acumulación"},
+            {v:"Sí — tres tardanzas equivalen a una inasistencia (régimen interno)"}
+          ]})
+        )
+      ),
+      r(Sub,{title:"Gestión y validación operativa"},
+        r("div",{className:"grid2"},
+          r(Sel,{label:"¿Quién consolida y valida el reporte antes de aplicar el descuento?",value:d.tardi_quien_consolida,onChange:v=>u("tardi_quien_consolida",v),opts:[
+            {v:"RRHH directamente del biométrico — sin validación intermedia"},
+            {v:"Cada jefe de área envía reporte firmado a RRHH"},
+            {v:"Comité o jefatura revisa y aprueba antes de aplicar descuentos"},
+            {v:"No hay proceso formal de validación"}
+          ]}),
+          r(Sel,{label:"¿Cómo se procesan las justificaciones de tardanza o inasistencia?",value:d.tardi_como_justifica,onChange:v=>u("tardi_como_justifica",v),opts:[
+            {v:"Papeleta física firmada por jefe inmediato — ingresada manualmente"},
+            {v:"Formulario digital interno — el sistema descuenta o no automáticamente"},
+            {v:"Solo certificado médico ESSALUD anula el descuento"},
+            {v:"No existe proceso formal de justificación"}
+          ],hint:"Definir este flujo es crítico: afecta directamente el monto neto del trabajador"})
+        )
+      )
+    ),
+    r(Sec,{title:"Conceptos remunerativos y otros descuentos"},
+      r("div",{className:"grid2"},
+        r(Sel,{full:true,label:"Sistema pensionario — ¿AFP, ONP o ambos?",value:d.afp_onp,onChange:v=>u("afp_onp",v),opts:[
+          {v:"Solo ONP — 13% sobre remuneración computable"},
+          {v:"Solo AFP — Habitat / Prima / Profuturo / Integra"},
+          {v:"Ambos sistemas — cada trabajador en el suyo según corresponda"}
+        ]}),
+        r(Sel,{full:true,label:"¿Calculan Impuesto a la Renta 5ta Categoría?",value:d.calcula_quinta,onChange:v=>u("calcula_quinta",v),opts:[
+          {v:"Sí — cálculo manual cada mes"},{v:"Sí — automatizado en el sistema actual"},
+          {v:"Solo algunos trabajadores alcanzan el mínimo imponible"},
+          {v:"No aplica — remuneraciones por debajo del límite anual"}
+        ],hint:"UIT 2026: S/ 5,350 · Mínimo anual gravable: S/ 37,450 (7 UIT)",hn:true}),
+        r(Chips,{full:true,label:"Otros descuentos que aplica la entidad (además de tardanzas y AFP/ONP)",opts:DESCUENTOS_OPC,selected:d.descuentos_opcionales||[],onChange:v=>u("descuentos_opcionales",v)}),
+        r(Sel,{full:true,label:"¿Cómo gestionan las licencias con y sin goce de haber?",value:d.manejo_licencias,onChange:v=>u("manejo_licencias",v),opts:[
+          {v:"Control en Excel separado del proceso de planillas"},
+          {v:"Sistema de RRHH integrado con la planilla"},
+          {v:"Sin sistema formal — registro en papel / memoria"}
+        ]})
+      )
+    ),
+    r(Sec,{title:"Problemas actuales y requerimientos",badge:"No negociable",bc:"red"},
+      r("div",{className:"info-box"},r("strong",null,"Nota: "),"Las respuestas de esta sección definen los requisitos con mayor prioridad en el diseño del sistema. Documentar con el mayor detalle posible."),
+      r("div",{className:"grid2"},
+        r(T,{full:true,label:"¿Cuáles son los errores o problemas más frecuentes?",value:d.errores_frecuentes,onChange:v=>u("errores_frecuentes",v),placeholder:"ej: cálculo manual de tardanzas genera reclamos, descuadres entre biométrico y planilla...",rows:3}),
+        r(T,{full:true,label:"¿Qué actividades les quitan más tiempo?",value:d.procesos_lentos,onChange:v=>u("procesos_lentos",v),placeholder:"ej: consolidar partes de asistencia de todas las áreas toma 2 días...",rows:2}),
+        r(T,{full:true,label:"¿Qué reportes generan y para quién?",value:d.reportes_actuales,onChange:v=>u("reportes_actuales",v),placeholder:"ej: PDT 601 → SUNAT, reporte tardanzas → jefaturas, detalle → SIAF...",rows:2}),
+        r(T,{full:true,label:"¿Qué procesos NO pueden tener ningún margen de error?",value:d.no_puede_fallar,onChange:v=>u("no_puede_fallar",v),placeholder:"ej: el descuento exacto por minutos de tardanza, retenciones AFP/ONP, plazos de pago...",rows:2,hint:"Define los casos de prueba obligatorios y la tolerancia cero del sistema"})
+      ),
+      r(T,{label:"Observaciones y notas adicionales",value:d.observaciones,onChange:v=>u("observaciones",v),rows:2})
+    )
+  );
+}
+
+/* ── Contabilidad ── */
+function ContForm({d,u}){
+  return r("div",null,
+    r(Sec,{title:"Datos del entrevistado",badge:"Obligatorio",bc:"red"},
+      r("div",{className:"grid3"},
+        r(I,{label:"Nombre completo",value:d.entrevistado,onChange:v=>u("entrevistado",v),req:true}),
+        r(I,{label:"Cargo / Puesto",value:d.cargo,onChange:v=>u("cargo",v),req:true}),
+        r(I,{label:"Correo electrónico",value:d.email,onChange:v=>u("email",v),type:"email"})
+      )
+    ),
+    r(Sec,{title:"Integración con SIAF (MEF)",badge:"Crítico",bc:"red"},
+      r("div",{className:"grid2"},
+        r(Sel,{full:true,label:"¿Cómo registran la planilla en SIAF actualmente?",value:d.registra_siaf,onChange:v=>u("registra_siaf",v),opts:[
+          {v:"Importación automática desde el sistema de planillas"},
+          {v:"Ingreso manual de expediente directamente en SIAF"},
+          {v:"El sistema genera resumen — ingreso manual a SIAF"},
+          {v:"No usa SIAF directamente — lo gestiona otra área"}
+        ]}),
+        r(I,{label:"Tipo de operación SIAF para planillas",value:d.tipo_operacion,onChange:v=>u("tipo_operacion",v),placeholder:"ej: tipo operación 032 — Planilla CAS"}),
+        r(I,{full:true,label:"Clasificadores presupuestales de personal utilizados",value:d.clasificadores,onChange:v=>u("clasificadores",v),placeholder:"ej: 2.1.1 Personal Activo, 2.1.5 Obligaciones del Empleador, 2.1.3 CAS...",hint:"Solicitar el listado completo — es la base del módulo presupuestal del sistema"}),
+        r(Sel,{full:true,label:"¿El sistema debe generar el expediente o archivo SIAF?",value:d.genera_archivo_siaf,onChange:v=>u("genera_archivo_siaf",v),opts:[
+          {v:"Sí — archivo completo listo para importar al SIAF"},
+          {v:"Solo reporte / resumen para ingreso manual por el operador"},
+          {v:"No es necesario — Contabilidad lo gestiona de forma independiente"}
+        ]})
+      )
+    ),
+    r(Sec,{title:"PDT 601 y trazabilidad"},
+      r("div",{className:"grid2"},
+        r(Sel,{label:"¿Quién gestiona la declaración del PDT 601?",value:d.pdt601_quien,onChange:v=>u("pdt601_quien",v),opts:[
+          {v:"RRHH genera el archivo — Contabilidad declara ante SUNAT"},
+          {v:"Contabilidad gestiona todo el proceso de declaración"},
+          {v:"Proceso conjunto entre RRHH y Contabilidad"}
+        ]}),
+        r(Sel,{label:"¿Con qué herramienta generan el PDT 601?",value:d.pdt601_herramienta,onChange:v=>u("pdt601_herramienta",v),opts:[
+          {v:"Aplicativo PDT SUNAT — ingreso campo por campo"},
+          {v:"El sistema exporta archivo .txt para importar al PDT"},
+          {v:"Módulo de declaración integrado en el sistema actual"}
+        ]}),
+        r(T,{full:true,label:"¿Han tenido observaciones de Contraloría (CGR) relacionadas a planillas?",value:d.observaciones_auditoria,onChange:v=>u("observaciones_auditoria",v),placeholder:"ej: informe 2023 sobre diferencias en cálculo de bonificaciones, falta de trazabilidad...",rows:3,hint:"Base para implementar D.Leg. 1451 (trazabilidad de modificaciones)"}),
+        r(T,{full:true,label:"Observaciones adicionales",value:d.observaciones,onChange:v=>u("observaciones",v),rows:2})
+      )
+    )
+  );
+}
+
+/* ── Tesorería ── */
+function TesForm({d,u}){
+  return r("div",null,
+    r(Sec,{title:"Datos del entrevistado",badge:"Obligatorio",bc:"red"},
+      r("div",{className:"grid3"},
+        r(I,{label:"Nombre completo",value:d.entrevistado,onChange:v=>u("entrevistado",v),req:true}),
+        r(I,{label:"Cargo / Puesto",value:d.cargo,onChange:v=>u("cargo",v),req:true}),
+        r(I,{label:"Email",value:d.email,onChange:v=>u("email",v),type:"email"})
+      )
+    ),
+    r(Sec,{title:"Ejecución del pago",badge:"Crítico",bc:"red"},
+      r(Chips,{full:true,label:"¿Cómo se ejecuta el pago? (puede ser combinación de métodos)",opts:METODOS,selected:d.metodos_pago,onChange:v=>u("metodos_pago",v)}),
+      r("div",{className:"grid2"},
+        r(I,{label:"Banco(s) principal(es)",value:d.banco_principal,onChange:v=>u("banco_principal",v),placeholder:"ej: Banco de la Nación, BCP, Interbank..."}),
+        r(Sel,{label:"¿Tienen convenio de abono masivo?",value:d.tiene_convenio,onChange:v=>u("tiene_convenio",v),opts:[
+          {v:"Sí — convenio vigente y operativo"},{v:"No — pagos individuales por ventanilla"},{v:"En trámite de firma de convenio"}
+        ]}),
+        r(Sel,{full:true,label:"¿El sistema debe generar el archivo plano para el banco?",value:d.genera_archivo_banco,onChange:v=>u("genera_archivo_banco",v),opts:[
+          {v:"Sí — es indispensable para el proceso de pago"},
+          {v:"Sería útil — actualmente se genera manualmente"},
+          {v:"No aplica para esta entidad"}
+        ]}),
+        r(I,{full:true,label:"Formato del archivo bancario (si aplica)",value:d.formato_banco,onChange:v=>u("formato_banco",v),placeholder:"ej: Banco de la Nación .txt, Interbank .csv, BBVA layout v2...",hint:"Pedir el manual de formato al ejecutivo del banco"})
+      )
+    ),
+    r(Sec,{title:"Control y flujo de aprobaciones"},
+      r("div",{className:"grid2"},
+        r(T,{label:"¿Cómo manejan las devoluciones o pagos incorrectos?",value:d.manejo_devoluciones,onChange:v=>u("manejo_devoluciones",v),placeholder:"ej: nota de débito interna, ajuste en planilla del mes siguiente...",rows:2}),
+        r(I,{label:"Cadena de aprobación del pago",value:d.quien_autoriza,onChange:v=>u("quien_autoriza",v),placeholder:"ej: Jefe RRHH → Director Adm. → Gerente General",hint:"Define los niveles del flujo de aprobaciones digital"}),
+        r(T,{full:true,label:"Observaciones adicionales",value:d.observaciones,onChange:v=>u("observaciones",v),rows:2})
+      )
+    )
+  );
+}
+
+/* ── Config ── */
+const SQL_=`-- Ejecutar en Supabase → SQL Editor → New Query
+CREATE TABLE IF NOT EXISTS levantamiento_planillas (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  entidad    TEXT,
+  tipo       TEXT CHECK (tipo IN ('rrhh','contabilidad','tesoreria')),
+  datos      JSONB NOT NULL
+);
+ALTER TABLE levantamiento_planillas ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ins" ON levantamiento_planillas FOR INSERT WITH CHECK (true);
+CREATE POLICY "sel" ON levantamiento_planillas FOR SELECT USING (true);`;
+
+function CfgForm({d,u,onTest,ts}){
+  const[cp,scp]=useState(false);
+  return r("div",null,
+    r(Sec,{title:"Configurar Supabase",badge:"Opcional",bc:"amber"},
+      r("div",{className:"subnote green"},
+        r("p",null,"Pasos para conectar (gratis permanente):"),
+        r("ol",null,
+          r("li",null,"Ir a supabase.com → crear cuenta gratuita"),
+          r("li",null,"Nuevo proyecto → región South America (São Paulo)"),
+          r("li",null,"Settings → API: copiar Project URL y anon public key"),
+          r("li",null,"SQL Editor: pegar y ejecutar el script de abajo"),
+          r("li",null,"Pegar credenciales aquí → Probar conexión → listo")
+        )
+      ),
+      r("div",{className:"grid2"},
+        r(I,{full:true,label:"Supabase Project URL",value:d.url,onChange:v=>u("url",v),placeholder:"https://xxxxxxxxxxxx.supabase.co"}),
+        r(I,{full:true,label:"Supabase Anon Key (public)",value:d.key,onChange:v=>u("key",v),placeholder:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."})
+      ),
+      r("div",{style:{display:"flex",alignItems:"center",gap:"12px"}},
+        r("button",{className:"btn btn-outline",onClick:onTest},"Probar conexión"),
+        ts&&r("span",{className:ts.ok?"save-ok":"save-err"},ts.msg)
+      )
+    ),
+    r(Sec,{title:"Script SQL — ejecutar una sola vez en Supabase"},
+      r("div",{className:"sql-wrap"},
+        r("pre",{className:"sql-pre"},SQL_),
+        r("button",{className:"sql-copy",onClick:()=>{navigator.clipboard.writeText(SQL_);scp(true);setTimeout(()=>scp(false),2000);}},cp?"✓ Copiado":"Copiar")
+      )
+    )
+  );
+}
+
+/* ── Progress bar ── */
+function PBar({label,pct,filled,total}){
+  const c=pct===100?"#4ade80":pct>50?"#93C5FD":"rgba(255,255,255,.25)";
+  return r("div",null,
+    r("div",{className:"prog-label"},label,r("span",null,filled+"/"+total)),
+    r("div",{className:"prog-track"},r("div",{className:"prog-fill",style:{width:pct+"%",background:c}}))
+  );
+}
+
+/* ── APP ROOT ── */
+function App(){
+  const[tab,setTab]=useState("rrhh");
+  const[data,setData]=useState(INI);
+  const[saving,setSaving]=useState(false);
+  const[ss,setSS]=useState(null);
+  const[showEx,setShowEx]=useState(false);
+  const[ts,setTs]=useState(null);
+  const[cpEx,setCpEx]=useState(false);
+  const u=(form,field,val)=>setData(p=>({...p,[form]:{...p[form],[field]:val}}));
+  const prR=cp(data.rrhh),prC=cp(data.contabilidad),prT=cp(data.tesoreria);
+  const tot=Math.round((prR.pct+prC.pct+prT.pct)/3);
+
+  const testConn=async()=>{
+    const{url,key}=data.config;
+    if(!url||!key){setTs({ok:false,msg:"Ingresa URL y Key primero."});return;}
+    try{
+      const rs=await fetch(url+"/rest/v1/levantamiento_planillas?limit=1",{headers:{apikey:key,Authorization:"Bearer "+key}});
+      if(rs.ok)setTs({ok:true,msg:"✓ Conexión exitosa — tabla accesible."});
+      else if(rs.status===404)setTs({ok:false,msg:"Conectado pero tabla no existe. Ejecuta el script SQL."});
+      else setTs({ok:false,msg:"Error "+rs.status+" — verifica credenciales."});
+    }catch(ex){setTs({ok:false,msg:"Sin conexión: "+ex.message});}
+  };
+
+  const save=async()=>{
+    const{url,key}=data.config;
+    if(!url||!key){setSS({ok:false,msg:"Configura Supabase en pestaña Config."});return;}
+    setSaving(true);setSS(null);
+    try{
+      const recs=[
+        {entidad:data.rrhh.entidad||"—",tipo:"rrhh",datos:data.rrhh},
+        {entidad:data.rrhh.entidad||"—",tipo:"contabilidad",datos:data.contabilidad},
+        {entidad:data.rrhh.entidad||"—",tipo:"tesoreria",datos:data.tesoreria}
+      ];
+      const rs=await fetch(url+"/rest/v1/levantamiento_planillas",{method:"POST",headers:{apikey:key,Authorization:"Bearer "+key,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(recs)});
+      if(rs.ok)setSS({ok:true,msg:"✓ Guardado — 3 registros (RRHH, Contabilidad, Tesorería)."});
+      else{const t=await rs.text();setSS({ok:false,msg:"Error "+rs.status+": "+t});}
+    }catch(ex){setSS({ok:false,msg:"Error de red: "+ex.message});}
+    setSaving(false);
+  };
+
+  const expJ=JSON.stringify({entidad:data.rrhh.entidad,fecha_levantamiento:data.rrhh.fecha,exportado:new Date().toISOString(),rrhh:data.rrhh,contabilidad:data.contabilidad,tesoreria:data.tesoreria},null,2);
+
+  const TABS=[
+    {id:"rrhh",label:"RRHH / Planillas",pct:prR.pct,f:prR.filled,t:prR.total},
+    {id:"contabilidad",label:"Contabilidad",pct:prC.pct,f:prC.filled,t:prC.total},
+    {id:"tesoreria",label:"Tesorería",pct:prT.pct,f:prT.filled,t:prT.total},
+    {id:"config",label:"⚙ Supabase",pct:null}
+  ];
+
+  return r("div",{className:"app"},
+    r("div",{className:"corp-header"},
+      r("div",{className:"corp-header-top"},
+        r("div",{className:"corp-logo"},
+          r("div",{className:"corp-logo-box"},"LI"),
+          r("div",null,
+            r("div",{className:"corp-logo-text"},"Formulario de Levantamiento de Información"),
+            r("div",{className:"corp-logo-sub"},"Sistema de Planillas — Entidad Pública Peruana")
+          )
+        ),
+        r("div",{className:"corp-badge"},"Normativa 2026")
+      ),
+      r("div",{className:"corp-header-body"},
+        r("div",null,
+          r("div",{className:"corp-title"},"Levantamiento de Información"),
+          r("div",{className:"corp-subtitle"},new Date().toLocaleDateString("es-PE",{weekday:"long",year:"numeric",month:"long",day:"numeric"}))
+        ),
+        r("div",null,r("div",{className:"corp-pct-num"},tot+"%"),r("div",{className:"corp-pct-label"},"completado"))
+      ),
+      r("div",{className:"prog-row"},
+        r(PBar,{label:"RRHH / Planillas",pct:prR.pct,filled:prR.filled,total:prR.total}),
+        r(PBar,{label:"Contabilidad",pct:prC.pct,filled:prC.filled,total:prC.total}),
+        r(PBar,{label:"Tesorería",pct:prT.pct,filled:prT.filled,total:prT.total})
+      )
+    ),
+    r("div",{className:"tabs-wrap"},
+      r("div",{className:"tabs"},TABS.map(t=>{
+        const pcl=t.pct===100?"done":t.pct>0?"partial":"";
+        return r("button",{key:t.id,className:"tab"+(tab===t.id?" active":""),onClick:()=>setTab(t.id)},
+          t.label,
+          t.pct!==null&&t.pct>0&&r("span",{className:"tab-pct "+pcl},t.pct+"%")
+        );
+      }))
+    ),
+    r("div",{className:"form-body"},
+      tab==="rrhh"&&r(RRHHForm,{d:data.rrhh,u:(f,v)=>u("rrhh",f,v)}),
+      tab==="contabilidad"&&r(ContForm,{d:data.contabilidad,u:(f,v)=>u("contabilidad",f,v)}),
+      tab==="tesoreria"&&r(TesForm,{d:data.tesoreria,u:(f,v)=>u("tesoreria",f,v)}),
+      tab==="config"&&r(CfgForm,{d:data.config,u:(f,v)=>u("config",f,v),onTest:testConn,ts:ts}),
+      r("div",{className:"action-bar"},
+        r("button",{className:"btn btn-outline",onClick:()=>setShowEx(!showEx)},showEx?"Ocultar JSON":"Exportar JSON"),
+        r("button",{className:"btn btn-primary",onClick:save,disabled:saving},saving?"Guardando...":"Guardar en Supabase"),
+        ss&&r("span",{className:ss.ok?"save-ok":"save-err"},ss.msg)
+      ),
+      showEx&&r("div",{className:"export-box"},
+        r("div",{className:"export-head"},
+          r("span",null,"Datos del levantamiento — JSON exportable"),
+          r("button",{className:"btn-sm",onClick:()=>{navigator.clipboard.writeText(expJ);setCpEx(true);setTimeout(()=>setCpEx(false),2000);}},cpEx?"✓ Copiado":"Copiar al portapapeles")
+        ),
+        r("pre",{className:"export-pre"},expJ)
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(r(App));
+</script>
+</body>
+</html>
